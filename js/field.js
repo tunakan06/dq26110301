@@ -107,7 +107,12 @@ function buildDungeon(id) {
   }
   ends.sort((a, b) => b[2] - a[2]);
   const chests = D.chests.map((item, i) => ends[i] ? { x: ends[i][0], y: ends[i][1], item } : null).filter(Boolean);
-  MAPS['dun:' + id] = { kind: 'dun', id, w: N, h: N, t, chests, D };
+  // ボスの間：迷路の上に専用の小部屋を作り、ボスが通路をふさがないようにする
+  const room = Array(N).fill('#'); room[9] = '.';
+  t[0][9] = '.';
+  t.unshift(room); t.unshift(Array(N).fill('#'));
+  chests.forEach((c) => (c.y += 2));
+  MAPS['dun:' + id] = { kind: 'dun', id, w: N, h: N + 2, t, chests, D };
 }
 
 function buildAll() { buildWorld(); buildTowns(); for (const id in DUNGEONS) buildDungeon(id); }
@@ -253,7 +258,7 @@ function onStep() {
     const T = { V: 'town:minato', H: 'town:hanami', S: 'town:shimo' }[c];
     if (T) return runEvent(() => goTo(T, 7, 10, 'up'));
     const D = { C: 'cave', W: 'tower', I: 'ice', K: 'castle' }[c];
-    if (D) return runEvent(() => goTo('dun:' + D, 9, 17, 'up', DUNGEONS[D].name));
+    if (D) return runEvent(() => goTo('dun:' + D, 9, 19, 'up', DUNGEONS[D].name));
   } else if (c === 'E') {
     return runEvent(leaveToWorld);
   }
@@ -502,7 +507,7 @@ async function fieldMenu() {
   let start = 0;
   for (;;) {
     renderStatus(true); renderGold(true);
-    const r = await choose([{ label: 'じゅもん' }, { label: 'どうぐ' }, { label: 'そうび' }, { label: 'つよさ' }, { label: 'セーブ' }, { label: Sound.on ? 'おと：ON' : 'おと：OFF' }],
+    const r = await choose([{ label: 'じゅもん' }, { label: 'どうぐ' }, { label: 'そうび' }, { label: 'つよさ' }, { label: 'セーブ' }, { label: Sound.on ? 'おと：ON' : 'おと：OFF' }, { label: 'むらへ もどる' }],
       { right: '3%', top: '24%', width: '66%' }, { cols: 2, start });
     if (r < 0) break;
     start = r;
@@ -512,6 +517,12 @@ async function fieldMenu() {
     if (r === 3) await showStats();
     if (r === 4) { const ok = saveGame(); await say(ok ? 'ぼうけんの きろくを かきこんだ。' : 'きろくできませんでした。（ブラウザの せってい を かくにん）'); showMsg(false); }
     if (r === 5) Sound.on = !Sound.on;
+    if (r === 6) {
+      await say('ミナトむらに もどりますか？\n（まよったときや うごけなくなったときに）');
+      const y = await choose([{ label: 'はい' }, { label: 'いいえ' }], { right: '8%', bottom: '40%' });
+      if (y === 0) { hideAllWindows(); await goTo('town:minato', 7, 9, 'up'); return; }
+      showMsg(false);
+    }
   }
   renderStatus(false); renderGold(false); showMsg(false);
 }
@@ -581,5 +592,6 @@ async function ending() {
   await fade(false);
   await new Promise((r) => { const h = (k) => { if (k === 'a') { Input.pop(h); r(); } }; h.isMsg = true; Input.push(h); });
   $('#ending').hidden = true;
-  location.reload();
+  hideAllWindows();
+  setTimeout(titleScreen, 0);
 }

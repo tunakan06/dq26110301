@@ -44,12 +44,17 @@ window.onFreePress = (k) => {
   if (k === 'b') { Sound.play('ok'); runEvent(fieldMenu); }
 };
 
-let last = performance.now();
+let last = performance.now(), stuckT = 0;
 function loop(tm) {
   const dt = Math.min(50, tm - last); last = tm;
   if (mode === 'title') drawTitle(tm);
   else if (Battle.active) Battle.draw(tm);
   else { updateField(dt); drawField(tm); }
+  // 安全装置：入力待ちも戦闘もないのに操作不能のままなら解除する
+  if (mode === 'field' && busy && !Input.handlers.length && !Battle.active && $('#fade').className !== 'on') {
+    stuckT += dt;
+    if (stuckT > 4000) { busy = false; stuckT = 0; showMsg(false); $('#layer').innerHTML = ''; }
+  } else stuckT = 0;
   requestAnimationFrame(loop);
 }
 

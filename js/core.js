@@ -92,8 +92,10 @@ const Input = {
   press(k) {
     Sound.init();
     const h = this.handlers[this.handlers.length - 1];
-    if (h) h(k);
-    else if (window.onFreePress) window.onFreePress(k);
+    try {
+      if (h) h(k);
+      else if (window.onFreePress) window.onFreePress(k);
+    } catch (e) { console.error(e); }
   },
   dir() { for (const d of ['up', 'down', 'left', 'right']) if (this.held[d]) return d; return null; },
 };
@@ -173,6 +175,7 @@ async function talk(...pages) { for (const p of pages) await say(p); showMsg(fal
 // items: [{label, right?, disabled?}] / pos: {top,left,right,bottom,width}
 function choose(items, pos = {}, opts = {}) {
   return new Promise((resolve) => {
+    if (!items.length) return resolve(-1);
     const win = document.createElement('div');
     win.className = 'win menu';
     if (opts.title) { const t = document.createElement('div'); t.className = 'wtitle'; t.textContent = opts.title; win.appendChild(t); }
