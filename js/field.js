@@ -288,6 +288,7 @@ async function goTo(map, x, y, dir, title) {
   G.map = map; G.x = x; G.y = y; G.dir = dir; P.moving = false;
   await fade(false);
   const m = curMap();
+  if (m.kind === 'town') saveGame(); // 町に入るたびに自動セーブ
   if (title || m.kind === 'town') { await say(title || m.town.name, { auto: 900 }); showMsg(false); }
 }
 

@@ -65,11 +65,25 @@ function loop(tm) {
   requestAnimationFrame(loop);
 }
 
-window.addEventListener('load', () => {
+// 起動。ページ更新が配信されたときは、遊んでいた状態を引き継いで再開する
+let booted = false;
+function boot(data) {
+  if (booted) return; booted = true;
   ctx = $('#cv').getContext('2d');
   ctx.imageSmoothingEnabled = false;
   buildAll();
   setupInput();
   requestAnimationFrame(loop);
-  titleScreen();
-});
+  if (data && data.G) {
+    G = data.G; mode = 'field'; busy = false; $('#title').hidden = true;
+    if (!curMap()) { G.map = 'town:minato'; G.x = 7; G.y = 9; }
+  } else titleScreen();
+}
+try {
+  window.claude?.hot?.snapshot?.(() => ({ G: mode === 'field' && !Battle.active ? G : null }));
+} catch (e) {}
+const hotData = (() => { try { return window.claude?.hot?.data ?? {}; } catch (e) { return {}; } })();
+try {
+  if (window.claude?.hot?.ready) window.claude.hot.ready(boot);
+  else boot(hotData);
+} catch (e) { boot({}); }
