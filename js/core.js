@@ -16,7 +16,7 @@ function newGame() {
     found: 0, placed: 0,
     flags: {},
     map: 'town:minato', x: 7, y: 9, dir: 'up',
-    steps: 0, nextEnc: 12,
+    steps: 0, nextEnc: 12, v: 2,
   };
 }
 

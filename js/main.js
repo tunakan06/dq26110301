@@ -28,6 +28,13 @@ async function titleScreen() {
   $('#title').hidden = true;
   if (r === 1 && loadGame()) {
     mode = 'field';
+    // 古いセーブ（ダンジョンの形が変わる前）の位置ずれを補正し、壁の中なら入口へ戻す
+    if (!G.v && G.map.startsWith('dun:')) G.y += 2;
+    G.v = 2;
+    const m = curMap();
+    if (!m || (!passable(m, G.x, G.y) && tileAt(m, G.x, G.y) !== 'E')) {
+      if (m && m.kind === 'dun') { G.x = 9; G.y = 19; } else { G.map = 'town:minato'; G.x = 7; G.y = 9; }
+    }
     await say(`${CHARS.ao.name}は ぼうけんを さいかいした。`, { auto: 900 }); showMsg(false);
     return;
   }
